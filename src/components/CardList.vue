@@ -19,7 +19,7 @@ const onClickAdd = () => {
       :imageUrl="item.imageUrl"
       :price="item.price"
       :is-added="true"
-      :is-favorite="false"
+      :is-favorite="item.isFavorite"
       :onClickAdd="onClickAdd"
     />
   </div>
