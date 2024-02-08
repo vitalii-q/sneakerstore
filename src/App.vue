@@ -1,5 +1,5 @@
 <script setup>
-import {onMounted, reactive, ref, watch} from "vue";
+import {onMounted, reactive, ref, provide, watch} from "vue";
 import axios from "axios";
 
 import Header from "@/components/Header.vue";
@@ -24,7 +24,7 @@ const fetchFavorites = async () => {
   try {
     const { data:favorites } = await axios.get('https://e974a97937eaa83d.mokky.dev/favorites')
     items.value = items.value.map(item => {
-      const favorite = favorites.find(favorite => favorite.product_id === item.id);
+      const favorite = favorites.find((favorite) => favorite.product_id === item.id);
 
       if (!favorite) {
         return item;
@@ -46,7 +46,25 @@ const onChangeSearchInput = (event) => {
 }
 
 const addToFavorite = async (item) => {
-  item.isFavorite = true
+  try {
+    if(!item.isFavorite) {
+      const obj = {
+        product_id: item.id
+      };
+
+      item.isFavorite = true
+
+      const { data } = await axios.post('https://e974a97937eaa83d.mokky.dev/favorites', obj)
+
+      item.favoriteId = data.id // сохраняем во фронте
+    } else {
+      item.isFavorite = false
+      await axios.delete(`https://e974a97937eaa83d.mokky.dev/favorites/${item.favoriteId}`)
+      item.favoriteId = null
+    }
+  } catch (err) {
+    console.log(err)
+  }
 }
 
 const fetchItems = async () => {
@@ -60,7 +78,12 @@ const fetchItems = async () => {
     }
 
     const { data } = await axios.get('https://e974a97937eaa83d.mokky.dev/items', {params})
-    items.value = data
+    items.value = data.map((obj) => ({
+      ...obj,
+      isFavorite: false,
+      favoriteId: null,
+      isAdded: false
+    }))
   } catch (err) {
     console.log(err)
   }
@@ -71,6 +94,8 @@ onMounted(async () => {
   await fetchFavorites();
 })
 watch(filters, fetchItems)
+
+provide('addToFavorite', addToFavorite)
 </script>
 
 <template>
@@ -102,7 +127,7 @@ watch(filters, fetchItems)
       </div>
 
       <div class="mt-10">
-        <CardList :items="items" />
+        <CardList :items="items" @addToFavorite="addToFavorite" />
       </div>
     </div>
   </div>
