@@ -29,14 +29,13 @@ defineProps({
           <b>{{ price }} €</b>
         </div>
 
-        <img @click="onClickAdd" :src="isAdded ? '/plus.svg' : '/checked.svg'" alt="Plus" />
+        <img @click="onClickAdd" :src="!isAdded ? '/plus.svg' : '/checked.svg'" alt="Plus" />
       </div>
     </div>
 </template>
 
 <script>
 export default {
-  // eslint-disable-next-line vue/multi-word-component-names
   name: "Card"
 }
 </script>
