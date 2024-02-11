@@ -2,14 +2,40 @@
 import DrawerHead from "@/components/DrawerHead.vue";
 import CartItemList from "@/components/CartItemList.vue";
 import InfoBlock from "@/components/InfoBlock.vue";
+import axios from "axios";
+import {computed, inject, ref} from "vue";
 
-const emit = defineEmits(['createOrder'])
-
-defineProps({
+const props = defineProps({
   totalPrice: Number,
   vatPrice: Number,
-  buttonDisabled: Boolean,
 })
+
+const { cart, closeDrawer } = inject('cart')
+
+const isCreating = ref(false)
+const orderId = ref(null)
+
+const createOrder = async () => {
+  isCreating.value = true
+
+  try {
+    const { data } = await axios.post('https://e974a97937eaa83d.mokky.dev/orders', {
+      items: cart,
+      totalPrice: props.totalPrice.value
+    })
+
+    cart.value = []
+
+    orderId.value = data.id
+  } catch (err) {
+    console.log(err)
+  } finally {
+    isCreating.value = false
+  }
+}
+
+const cartIsEmpty = computed(() => cart.value.length === 0 )
+const buttonDisabled = computed(() => isCreating.value || cartIsEmpty.value)
 </script>
 
 <template>
@@ -19,9 +45,17 @@ defineProps({
 
     <div v-if="!totalPrice" class="flex h-full items-center">
       <InfoBlock
+        v-if="!totalPrice && !orderId"
         title="Cart is empty"
         description="Add at least one pair of sneakers to place an order."
         image-url="/package-icon.png"
+      />
+
+      <InfoBlock
+        v-if="orderId"
+        title="Order placed!"
+        :description="`Your order #${orderId} will soon be handed over to shipping`"
+        image-url="/order-success-icon.png"
       />
     </div>
 
@@ -43,7 +77,7 @@ defineProps({
 
         <button
           :disabled="buttonDisabled"
-          @click="() => emit('createOrder')"
+          @click="createOrder"
           class="mt-4 transition bg-lime-500 w-full rounded-xl py-3 text-white disabled:bg-slate-300 hover:bg-lime-600 active:bg-lime-700 cursor-pointer">
           Order
         </button>

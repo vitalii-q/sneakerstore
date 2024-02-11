@@ -1,6 +1,7 @@
 <script setup>
 import {onMounted, reactive, ref, watch} from "vue";
 import axios from "axios";
+import debounce from 'lodash.debounce'
 import { inject } from "vue";
 import CardList from "@/components/CardList.vue";
 
@@ -27,9 +28,9 @@ const onChangeSelect = (event) => {
   filters.sortBy = event.target.value;
 }
 
-const onChangeSearchInput = (event) => {
+const onChangeSearchInput = debounce((event) => { // debounce - задержка перед отправкой запроса. npm i lodash.debounce
   filters.searchQuery = event.target.value;
-}
+}, 500)
 
 const fetchItems = async () => {
   try {
@@ -121,7 +122,7 @@ watch(filters, fetchItems)
 
 <template>
   <div class="flex justify-between items-center">
-    <h2 class="text-3x1 font-bold mb-8">All sneakers</h2>
+    <h2 class="text-3xl font-bold mb-8">All sneakers</h2>
 
     <div class="flex gap-4">
       <select @change="onChangeSelect" class="py-2 px-3 border rounded-md outline-none">
